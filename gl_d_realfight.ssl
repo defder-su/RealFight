@@ -1,0 +1,94 @@
+/*  
+
+Real Fight mod for Fallout 2 by Defder
+----------------------------------------
+
+- after action, first step may take extra 1 AP
+- reduces current AP when health <75%
+
+Tested on sfall 4.4.5.1
+
+*/
+
+
+procedure start;
+
+#define SCRIPT_REALNAME "gl_d_realfight"
+
+#define STAT_max_hit_points (7)
+#define STAT_current_hp (35)
+
+#define HOOK_COMBATTURN (27)
+#define HOOK_MOVECOST (11)
+
+variable action_points;
+variable last_move_cost;
+variable last_move_cost_critter;
+variable acted;
+variable was_acted;
+variable was_nerfed;
+
+procedure movecost_handler begin
+   variable critter, distance, apc;
+   critter := get_sfall_arg;
+   distance := get_sfall_arg;
+   apc := get_sfall_arg;
+   variable ap, diff;
+   ap := get_critter_current_ap(critter);
+   diff := action_points-ap;
+   if (diff > 0) then begin
+      if ((diff == last_move_cost) orElse (critter != last_move_cost_critter) orElse (ap == 1)) then
+         acted := False;
+      else begin
+         acted := True;
+         if (critter == dude_obj) then begin
+            if (was_acted == False) then begin
+               display_msg("After action, first step may take extra 1 AP");
+               was_acted = True;
+            end
+         end
+      end
+      action_points := ap;
+   end
+   if (acted andAlso (ap > 1)) then
+      apc := apc + 1;
+   last_move_cost := apc;
+   last_move_cost_critter := critter;
+   set_sfall_return(apc);
+end
+
+procedure combatturn_handler begin
+   variable eventtype, critter, saved, f;
+   eventtype := get_sfall_arg;
+   if (eventtype == 1) then begin
+      critter := get_sfall_arg;
+      variable ap;
+      action_points := get_critter_current_ap(critter);
+      last_move_cost := 0;
+      acted = False;
+	   f := 0.25 + get_critter_stat(critter, STAT_current_hp) * 1.0 / get_critter_stat(critter, STAT_max_hit_points);
+	   if (f < 1) then begin
+         saved := get_sfall_arg;
+         if (saved == 0) then begin
+		      ap := ceil(action_points*f);
+		      if (critter == dude_obj) then begin
+		         variable nerfed;
+		         nerfed = action_points - ap;
+               if ((was_nerfed != nerfed) andAlso (nerfed > 0)) then begin
+                  display_msg("For health reasons, only " + ap + " out of " + action_points + " AP available");
+                  was_nerfed = nerfed;
+               end
+            end
+		      action_points := ap;
+		      set_critter_current_ap(critter, ap);
+         end
+      end
+   end
+end
+
+procedure start begin
+   if game_loaded then begin
+	   register_hook_proc(HOOK_COMBATTURN, combatturn_handler);
+	   register_hook_proc(HOOK_MOVECOST, movecost_handler);
+   end
+end
