@@ -35,7 +35,7 @@ procedure movecost_handler begin
    apc := get_sfall_arg;
    variable ap, diff;
    ap := get_critter_current_ap(critter);
-   diff := action_points-ap;
+   diff := action_points - ap;
    if (diff > 0) then begin
       if ((diff == last_move_cost) orElse (critter != last_move_cost_critter) orElse (ap == 1)) then
          acted := False;
@@ -43,7 +43,7 @@ procedure movecost_handler begin
          acted := True;
          if (critter == dude_obj) then begin
             if (was_acted == False) then begin
-               display_msg("After action, first step may take extra 1 AP");
+               display_msg("After action, first step may take extra 1 AP.");
                was_acted = True;
             end
          end
@@ -70,12 +70,12 @@ procedure combatturn_handler begin
 	   if (f < 1) then begin
          saved := get_sfall_arg;
          if (saved == 0) then begin
-		      ap := ceil(action_points*f);
+		      ap := ceil(action_points * f);
 		      if (critter == dude_obj) then begin
 		         variable nerfed;
 		         nerfed = action_points - ap;
                if ((was_nerfed != nerfed) andAlso (nerfed > 0)) then begin
-                  display_msg("For health reasons, only " + ap + " out of " + action_points + " AP available");
+                  display_msg("For health reasons, only " + ap + " out of " + action_points + " AP available.");
                   was_nerfed = nerfed;
                end
             end
